@@ -1,0 +1,271 @@
+package summer;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import javax.imageio.ImageIO;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JFileChooser;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+
+public class ImageProcessor extends JFrame{
+
+
+		private int WIDTH = 512;
+		private int HEIGHT = 512;
+		private BufferedImage image;
+
+		private ControlPanel controlPanel;
+		private ImageDisplay display;
+		
+		public ImageProcessor ()
+		{
+			setTitle("Processor");
+
+			// -- size of the frame: width, height
+			setSize(WIDTH, HEIGHT);
+
+			// -- center the frame on the screen
+			setLocationRelativeTo(null);
+
+			// -- shut down the entire application when the frame is closed
+			//    if you don't include this the application will continue to
+
+			//    run in the background and you'll have to kill it by pressing
+			//    the red square in eclipse
+			setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+			// -- set the layout manager and add items
+			//    5, 5 is the border around the edges of the areas
+			setLayout(new BorderLayout(5, 5));
+
+			controlPanel = new ControlPanel();
+			this.add(controlPanel, BorderLayout.WEST);
+			
+			display = new ImageDisplay();
+			this.add(display, BorderLayout.CENTER);
+
+			// -- show the frame on the screen
+			setVisible(true);
+
+		}
+
+		// -- Inner class for control panel
+		public class ControlPanel extends JPanel {
+
+			private JButton load, saveToPNG;
+			private JLabel fName;
+			private JTextField filename;
+			private JComboBox dropdown;
+
+			public ControlPanel ()
+			{
+				String[] operations = {"--", "Rotate", "FlipHorizontal", "FlipVertical", "Grayscale"};
+				filename = new JTextField("output.png");
+				fName = new JLabel("File name");
+				// -- set up buttons
+				dropdown = new JComboBox(operations);
+				prepareButtonHandlers();
+				prepareDropdown();
+
+				// -- add buttons and text field to panel layout manager
+				setLayout(new GridLayout(20, 1, 1, 1));
+
+				this.add(load);
+				this.add(dropdown);
+				this.add(fName);
+				this.add(filename);
+				this.add(saveToPNG); 
+
+			}
+			private void prepareDropdown()
+			{
+				dropdown.addActionListener(
+						 new ActionListener(){
+					    
+					    public void actionPerformed(ActionEvent e) {
+					        JComboBox dropdown = (JComboBox)e.getSource();
+					        String choice = (String)dropdown.getSelectedItem();
+					        switch(choice) {
+					        case "Rotate":
+					        	image = rotate();
+					            break;
+					        case "FlipHorizontal":
+					        	flipHorizontal();
+					            break;
+					        case "FlipVertical":
+				            	flipVertical();
+				            	break;
+					        case "Grayscale":
+					        	grayscale();
+					        	break;
+				        }
+					        display.repaint();
+					    }
+			    });
+			}
+			private void prepareButtonHandlers()
+			{
+				load = new JButton("Load");
+				load.addActionListener(
+						new ActionListener() {
+							public void actionPerformed(ActionEvent arg0) {
+		//						JFileChooser jfc = new JFileChooser();
+		//						int returnVal = jfc.showOpenDialog(ImageProcessor.this);
+
+//								if (returnVal == JFileChooser.APPROVE_OPTION) {
+									try {
+//										image = ImageIO.read(jfc.getSelectedFile());
+										image = ImageIO.read(new File("./input5.png"));
+										display.repaint();
+									}
+									catch (IOException e) {
+										System.out.println("File location not found.");
+								    }
+//							    }‎
+							}
+						}
+						);
+			
+				saveToPNG = new JButton("Save");
+				saveToPNG.addActionListener(
+						new ActionListener() {
+							public void actionPerformed(ActionEvent arg0) {
+		//						JFileChooser jfc = new JFileChooser();
+		//						int returnVal = jfc.showSaveDialog(ImageProcessor.this);
+
+		//						if (returnVal == JFileChooser.APPROVE_OPTION) {
+
+									try {
+										File outputfile = new File(filename.getText());
+								    	ImageIO.write(image, "png", outputfile);
+									} catch (IOException e) {
+										System.out.println("File location not found.");
+									}
+		//						}
+							}
+						}
+						);
+
+			}
+			
+		
+
+			public Dimension getPreferredSize() 
+			{
+				return new Dimension(130, 500);
+			}
+
+		}
+		public BufferedImage rotate() {
+			int w = image.getWidth();
+			int h = image.getHeight();
+			BufferedImage image2 = new BufferedImage(h, w, BufferedImage.TYPE_INT_RGB);
+			for(int i = 0; i < w; i++){
+	            for(int j = 0; j < h; j++){
+                   image2.setRGB(j, i, image.getRGB(i, j));
+	            }
+			}
+			return image2;
+		}
+		public void flipVertical() {
+			int w = image.getWidth();
+			int h = image.getHeight();
+    		for(int i = 0; i < w/2; i++){
+	            for(int j = 0; j < h; j++){
+	            	int temp = image.getRGB(i, j);
+                    image.setRGB(i, j, image.getRGB(w - i - 1, j));
+                    image.setRGB(w - i - 1, j, temp);
+	            }
+			}
+		}
+		public void flipHorizontal() {
+			int w = image.getWidth();
+			int h = image.getHeight();
+    		for(int i = 0; i < w; i++){
+	            for(int j = 0; j < h/2; j++){
+	            	int temp = image.getRGB(i, j);
+                    image.setRGB(i, j, image.getRGB(i, h - j - 1));
+                    image.setRGB(i, h - j- 1, temp);
+	            }
+			}
+		}
+		public void grayscale() {
+			int w = image.getWidth();
+			int h = image.getHeight();
+    		for(int i = 0; i < w; i++){
+	            for(int j = 0; j < h; j++){
+	            	int color = image.getRGB(i, j);
+	            	int alpha = (color >> 24) & 0xFF;
+	            	double r = (color >> 16) & 0xFF;
+	                double g = (color >> 8) & 0xFF;
+	                double b = (color >> 0) & 0xFF;
+	                r *= 0.299;
+	                g *= 0.587;
+	                b *= 0.114;
+	                int gray = (int)(r + g + b);
+	                color = (alpha << 24 |(gray << 16) | (gray << 8) | gray);
+                    image.setRGB(i, j, color);
+	            }
+			}
+		}
+        public void WriteImage(int img[][], String filename) throws IOException
+		{
+			try {
+				image = new BufferedImage(img[0].length, img.length, BufferedImage.TYPE_INT_RGB);
+		    	
+		    	// -- prepare output image
+		    	for (int i = 0; i < image.getHeight(); ++i) {
+		    	    for (int j = 0; j < image.getWidth(); ++j) {
+		    			int pixel =	(img[i][j] << 16) | (img[i][j] << 8) | (img[i][j]);
+		    			image.setRGB(j, i, pixel);
+		    		}
+		    	}
+		
+		    	// -- write output image
+		    	File outputfile = new File(filename);
+		    	ImageIO.write(image, "png", outputfile);
+			}
+			catch (IOException e) {
+				throw e;
+			}
+		}
+        public class ImageDisplay extends JPanel {
+    		public ImageDisplay (){
+                super();	
+                this.setBackground(Color.gray);   
+            }
+    		
+    		public Dimension getPreferredSize() 
+    		{
+    			return new Dimension(50, 50);
+    		}
+
+    		public void paint(Graphics g)
+            {
+                super.paintComponent(g);
+
+                Graphics2D g2d = (Graphics2D)g;
+                int h = this.getHeight();
+                int w = this.getWidth();
+                g2d.drawImage(image, 0, 0, w, h, null);
+    		}
+    	}
+	public static void main(String[] args) {
+		// TODO Auto-generated method stub
+		new ImageProcessor();
+
+	}
+
+}
