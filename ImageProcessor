@@ -71,7 +71,7 @@ public class ImageProcessor extends JFrame{
 
 			public ControlPanel ()
 			{
-				String[] operations = {"--", "Rotate", "FlipHorizontal", "FlipVertical", "Grayscale"};
+				String[] operations = {"--", "Rotate", "FlipHorizontal", "FlipVertical", "Grayscale", "Enlarge", "Reduce"};
 				filename = new JTextField("output.png");
 				fName = new JLabel("File name");
 				// -- set up buttons
@@ -110,6 +110,12 @@ public class ImageProcessor extends JFrame{
 					        case "Grayscale":
 					        	grayscale();
 					        	break;
+					        case "Enlarge":
+					        	image = enlarge();
+					        	break;
+					        case "Reduce":
+					        	image = reduce();
+					        	break;
 				        }
 					        display.repaint();
 					    }
@@ -127,7 +133,7 @@ public class ImageProcessor extends JFrame{
 //								if (returnVal == JFileChooser.APPROVE_OPTION) {
 									try {
 //										image = ImageIO.read(jfc.getSelectedFile());
-										image = ImageIO.read(new File("./input5.png"));
+										image = ImageIO.read(new File("./input4.png"));
 										display.repaint();
 									}
 									catch (IOException e) {
@@ -168,15 +174,24 @@ public class ImageProcessor extends JFrame{
 			}
 
 		}
-		public BufferedImage rotate() {
+		public BufferedImage rotate() {//!!!!!!!!!!
 			int w = image.getWidth();
 			int h = image.getHeight();
 			BufferedImage image2 = new BufferedImage(h, w, BufferedImage.TYPE_INT_RGB);
+		//	for(int i = 0; i < w; i++){
+	 //           for(int j = 0; j < h; j++){
+                //   image2.setRGB(j, i, image.getRGB(i, j));
+	          //  }     
+			//}
 			for(int i = 0; i < w; i++){
-	            for(int j = 0; j < h; j++){
-                   image2.setRGB(j, i, image.getRGB(i, j));
+	            for(int j = i; j < h - 1 - i; j++){
+	                int temp = 								image.getRGB(i, j);
+	                image2.setRGB(i, j, 					image.getRGB(w - 1 - j,i));
+	                image2.setRGB(h - 1 - j, i,  			image.getRGB(w - 1 - i,h - 1 - j));
+	                image2.setRGB(h - 1 - i, w - 1 - j, 	image.getRGB(j,h - 1 - i));
+	                image2.setRGB(j, w - 1 - i,  			temp);
 	            }
-			}
+	        }
 			return image2;
 		}
 		public void flipVertical() {
@@ -214,11 +229,44 @@ public class ImageProcessor extends JFrame{
 	                r *= 0.299;
 	                g *= 0.587;
 	                b *= 0.114;
-	                int gray = (int)(r + g + b);
+	                int gray = (int)(r + g + b);///3;
 	                color = (alpha << 24 |(gray << 16) | (gray << 8) | gray);
                     image.setRGB(i, j, color);
 	            }
 			}
+		}
+		public BufferedImage enlarge() {
+			int w = image.getWidth();
+			int h = image.getHeight();
+			BufferedImage image2 = new BufferedImage(h * 2, w * 2, BufferedImage.TYPE_INT_RGB);
+			System.out.println("wh: "+w+ "   "+ h);
+			for(int i = 0; i < w; i++){
+	            for(int j = 0; j < h; j++){
+	            	System.out.println(i+ "   "+ j+ "          "+ i*2+"   "+ j*2);
+	            	int rgb = image.getRGB(i, j);
+                    image2.setRGB(i * 2, j * 2, rgb);
+                    image2.setRGB(i * 2, j * 2 + 1, rgb);
+                    image2.setRGB(i * 2 + 1, j * 2, rgb);
+                    image2.setRGB(i * 2 + 1, j * 2 + 1, rgb);
+	            }
+			}
+			return image2;
+		}
+		public BufferedImage reduce() {
+			int w = image.getWidth();
+			int h = image.getHeight();
+			BufferedImage image2 = new BufferedImage(h / 2, w / 2, BufferedImage.TYPE_INT_RGB);
+			for(int i = 0; i < w; i++){
+	            for(int j = 0; j < h - 1; j++){
+	            	int rgb = image.getRGB(i, j);
+	            	rgb += image.getRGB(i, j + 1);
+	            	rgb += image.getRGB(i + 1, j);
+	            	rgb += image.getRGB(i + 1, j + 1);
+	            	rgb /= 4;
+                    image2.setRGB(i, j, rgb);
+	            }
+			}
+			return image2;
 		}
         public void WriteImage(int img[][], String filename) throws IOException
 		{
@@ -269,3 +317,4 @@ public class ImageProcessor extends JFrame{
 	}
 
 }
+
