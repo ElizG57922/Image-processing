@@ -71,7 +71,7 @@ public class ImageProcessor extends JFrame{
 
 			public ControlPanel ()
 			{
-				String[] operations = {"--", "Rotate", "FlipHorizontal", "FlipVertical", "Grayscale", "Enlarge", "Reduce"};
+				String[] operations = {"--", "Rotate", "FlipHorizontal", "FlipVertical", "Grayscale", "Enlarge", "Reduce", "EdgeDetection"};
 				filename = new JTextField("output.png");
 				fName = new JLabel("File name");
 				// -- set up buttons
@@ -116,6 +116,9 @@ public class ImageProcessor extends JFrame{
 					        case "Reduce":
 					        	image = reduce();
 					        	break;
+					        case "EdgeDetection":
+					        	edgeDetection();
+					        	break;
 				        }
 					        display.repaint();
 					    }
@@ -127,19 +130,16 @@ public class ImageProcessor extends JFrame{
 				load.addActionListener(
 						new ActionListener() {
 							public void actionPerformed(ActionEvent arg0) {
-		//						JFileChooser jfc = new JFileChooser();
-		//						int returnVal = jfc.showOpenDialog(ImageProcessor.this);
+								JFileChooser jfc = new JFileChooser();
+								 jfc.showOpenDialog(ImageProcessor.this);
 
-//								if (returnVal == JFileChooser.APPROVE_OPTION) {
 									try {
-//										image = ImageIO.read(jfc.getSelectedFile());
-										image = ImageIO.read(new File("./input3.png"));
+										image = ImageIO.read(jfc.getSelectedFile());
 										display.repaint();
 									}
 									catch (IOException e) {
 										System.out.println("File location not found.");
 								    }
-//							    }‎
 							}
 						}
 						);
@@ -148,18 +148,12 @@ public class ImageProcessor extends JFrame{
 				saveToPNG.addActionListener(
 						new ActionListener() {
 							public void actionPerformed(ActionEvent arg0) {
-		//						JFileChooser jfc = new JFileChooser();
-		//						int returnVal = jfc.showSaveDialog(ImageProcessor.this);
-
-		//						if (returnVal == JFileChooser.APPROVE_OPTION) {
-
-									try {
-										File outputfile = new File(filename.getText());
-								    	ImageIO.write(image, "png", outputfile);
-									} catch (IOException e) {
-										System.out.println("File location not found.");
-									}
-		//						}
+								try {
+									File outputfile = new File(filename.getText());
+							    	ImageIO.write(image, "png", outputfile);
+								} catch (IOException e) {
+									System.out.println("File location not found.");
+								}
 							}
 						}
 						);
@@ -220,12 +214,44 @@ public class ImageProcessor extends JFrame{
 	                r *= 0.299;
 	                g *= 0.587;
 	                b *= 0.114;
-	                int gray = (int)(r + g + b);///3;
+	                int gray = (int)(r + g + b);
 	                color = (alpha << 24 |(gray << 16) | (gray << 8) | gray);
                     image.setRGB(i, j, color);
 	            }
 			}
 		}
+		public void edgeDetection() { //not an official method, but a simpler one of my own design
+			int w = image.getWidth();
+			int h = image.getHeight();
+			int tolerance = 25; //difference in colors needed to qualify as an edge
+			int black = Color.BLACK.getRGB();
+			int white = Color.WHITE.getRGB();
+			grayscale();
+			for(int i = 0; i < w - 1; i++) {
+     			for (int j = 0; j < h - 1; j++) {
+     				int gray1 = (image.getRGB(i, j) >> 16) & 0xFF;
+    				if(Math.abs(gray1 - ((image.getRGB(i, j + 1) >> 16) & 0xFF)) > tolerance)
+    					image.setRGB(i, j, black);
+    				else if (Math.abs(gray1 - ((image.getRGB(i + 1, j) >> 16) & 0xFF)) > tolerance)
+    					image.setRGB(i, j, black);
+    				else if (Math.abs(gray1 - ((image.getRGB(i + 1, j + 1) >> 16) & 0xFF)) > tolerance)
+    					image.setRGB(i, j, black);
+    				else
+    					image.setRGB(i, j, white);
+      			}
+     			//compare last pixel on edge to pixel below it
+     			if(Math.abs(((image.getRGB(i, h - 1) >> 16) & 0xFF) - ((image.getRGB(i + 1, h - 1) >> 16) & 0xFF)) > tolerance)
+					image.setRGB(i, h - 1, black);
+    		}
+			//comparisons in the bottom row
+			for (int j = 0; j < h - 1; j++) {
+				if(Math.abs((image.getRGB(w - 1, j) >> 16) & 0xFF) - (((image.getRGB(w - 1, j + 1) >> 16) & 0xFF)) > tolerance)
+					image.setRGB(w - 1, j, black);
+			}
+			//last pixel must be white
+			image.setRGB(w - 1, h - 1, white);
+		}
+
 		public BufferedImage enlarge() {
 			int w = image.getWidth();
 			int h = image.getHeight();
