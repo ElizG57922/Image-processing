@@ -71,7 +71,7 @@ public class ImageProcessor extends JFrame{
 
 			public ControlPanel ()
 			{
-				String[] operations = {"--", "Rotate", "FlipHorizontal", "FlipVertical", "Grayscale", "Enlarge", "Reduce", "EdgeDetection"};
+				String[] operations = {"--", "Rotate", "FlipHorizontal", "FlipVertical", "Grayscale", "Invert", "Enlarge", "Reduce", "EdgeDetection"};
 				filename = new JTextField("output.png");
 				fName = new JLabel("File name");
 				// -- set up buttons
@@ -109,6 +109,9 @@ public class ImageProcessor extends JFrame{
 				            	break;
 					        case "Grayscale":
 					        	grayscale();
+					        	break;
+					        case "Invert":
+					        	invert();
 					        	break;
 					        case "Enlarge":
 					        	image = enlarge();
@@ -220,6 +223,24 @@ public class ImageProcessor extends JFrame{
 	            }
 			}
 		}
+		public void invert() {
+			int w = image.getWidth();
+			int h = image.getHeight();
+    		for(int i = 0; i < w; i++){
+	            for(int j = 0; j < h; j++){
+	            	int color = image.getRGB(i, j);
+	            	int alpha = (color >> 24) & 0xFF;
+	            	int r = (color >> 16) & 0xFF;
+	                int g = (color >> 8) & 0xFF;
+	                int b = (color >> 0) & 0xFF;
+	                r = 0xFF - r;
+	                g = 0xFF - g;
+	                b = 0xFF - b;
+	                color = (alpha << 24 |(r << 16) | (g << 8) | b);
+                    image.setRGB(i, j, color);
+	            }
+			}
+		}
 		public void edgeDetection() { //not an official method, but a simpler one of my own design
 			int w = image.getWidth();
 			int h = image.getHeight();
@@ -320,10 +341,7 @@ public class ImageProcessor extends JFrame{
                 g2d.drawImage(image, 0, 0, w, h, null);
     		}
     	}
-	public static void main(String[] args) {
-		// TODO Auto-generated method stub
+	public static void main(String[] args) {		
 		new ImageProcessor();
-
 	}
-
 }
